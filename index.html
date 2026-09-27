@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Formica — the deep burrow</title>
+<meta name="description" content="A fire ant works her way down through five floors of a living ant burrow." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bitter:ital,wght@0,500;0,700;1,500&family=Barlow+Semi+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+
+<div id="app"></div>
+<div id="hurt"></div>
+<div id="dmg-layer">
+  <span class="dmg"></span><span class="dmg"></span><span class="dmg"></span><span class="dmg"></span>
+  <span class="dmg"></span><span class="dmg"></span><span class="dmg"></span><span class="dmg"></span>
+  <span class="dmg"></span><span class="dmg"></span><span class="dmg"></span><span class="dmg"></span>
+  <span class="dmg"></span><span class="dmg"></span><span class="dmg"></span><span class="dmg"></span>
+</div>
+
+<div id="hud">
+  <div id="crosshair"><i></i><i></i><i></i><i></i></div>
+  <div id="hitmarker"><i></i><i></i></div>
+
+  <div class="floorplate">
+    <h1 id="floor-name">Entrance galleries</h1>
+    <p id="floor-sub">Floor 1 of 5</p>
+  </div>
+
+  <div id="room-label"></div>
+
+  <div id="timer-wrap" class="gone">
+    <span class="tick">Cave-in</span><strong id="timer">4:00</strong>
+  </div>
+
+  <ul id="killfeed"></ul>
+  <div id="banner"><h2 id="banner-name"></h2><p id="banner-line"></p></div>
+  <div id="toast"></div>
+
+  <p id="state-note">
+    <span class="crawl">Squeezing through</span>
+    <span class="swim">Swimming</span>
+    <span class="raft">Riding a leaf</span>
+  </p>
+
+  <div class="vitals">
+    <div class="hp">
+      <b id="hp-num">160</b>
+      <div class="bar"><i id="hp-fill"></i></div>
+    </div>
+    <div class="row"><span class="tag">Sprint</span><div class="bar thin stam"><i id="stam-fill"></i></div></div>
+    <div class="row"><span class="tag">Scent</span><div class="bar thin scent"><i id="scent-fill"></i></div></div>
+    <div class="row"><span class="tag">Alarm</span><div class="bar thin alarm"><i id="alarm-fill"></i></div></div>
+  </div>
+
+  <div class="powers">
+    <div class="pw" id="pw-call"><kbd>C</kbd><span>Call nestmates</span></div>
+    <div class="pw" id="pw-carry"><kbd>E</kbd><span>Carrying brood</span></div>
+  </div>
+
+  <div class="gunbox">
+    <div class="slots">
+      <div class="slot active" id="slot-acid"><kbd>1</kbd><span>Acid</span></div>
+      <div class="slot" id="slot-bite"><kbd>2</kbd><span>Mandibles</span></div>
+    </div>
+    <p class="gunname" id="gun-name">Formic acid</p>
+    <p class="ammo" id="ammo-wrap"><b id="ammo-count">70</b><em>/</em><span id="ammo-max">70</span></p>
+  </div>
+
+  <div class="crop">
+    <span class="tag">Crop</span>
+    <p><b id="crop-have">0</b><em>of</em><span id="crop-need">6</span></p>
+  </div>
+
+  <canvas id="minimap" width="200" height="200"></canvas>
+</div>
+
+<!-- ------------------------------------------------------------ screens -->
+<section id="screen-load" class="screen centre">
+  <div class="loader">
+    <p class="genus">Solenopsis invicta</p>
+    <h1 class="title">Formica</h1>
+    <div class="loadbar"><i id="load-bar"></i></div>
+    <p id="load-what">Digging the colony…</p>
+  </div>
+</section>
+
+<section id="screen-title" class="screen left gone">
+  <div class="plate">
+    <p class="genus">Solenopsis invicta &middot; worker, 4&nbsp;mm</p>
+    <h1 class="title">Formica</h1>
+    <p class="sub">Five floors down inside a living burrow</p>
+
+    <p class="lede">
+      This is not a maze of corridors. It is a burrow — wide chambers hollowed
+      out of the soil, humped with hills, joined by tunnels that narrow until
+      you have to squeeze. Chambers look different for a reason: the brood
+      rooms, the granary, the larder where the honeypot ants hang. Learn them,
+      because the way down is not marked until you find it.
+    </p>
+
+    <dl class="keys">
+      <dt>W A S D</dt><dd>Move &middot; Shift to run, Space to jump</dd>
+      <dt>Mouse</dt><dd>Aim. Left click sprays formic acid</dd>
+      <dt>2</dt><dd>Mandibles — far more damage, but you must close in</dd>
+      <dt>E</dt><dd>Drink from a honeypot ant, or pick up brood</dd>
+      <dt>C</dt><dd>Call nestmates, once you have the gland</dd>
+      <dt>Q</dt><dd>Hold to follow the scent trail when you are lost</dd>
+      <dt>Esc</dt><dd>Pause &middot; M mutes</dd>
+    </dl>
+
+    <button id="btn-start" class="cta">Go down</button>
+    <p class="note">Click the view once to capture your mouse.</p>
+  </div>
+</section>
+
+<section id="screen-pause" class="screen centre gone">
+  <div class="card">
+    <h2>Paused</h2>
+    <p>The burrow is still down there, working out where you went.</p>
+    <button id="btn-resume" class="cta">Back in</button>
+  </div>
+</section>
+
+<section id="screen-dead" class="screen centre gone">
+  <div class="card dead">
+    <h2>They got you</h2>
+    <p id="dead-reason">The colony tore you apart.</p>
+    <ul class="report">
+      <li><span>Died on</span><b id="dead-floor">—</b></li>
+      <li><span>Ants killed</span><b id="dead-kills">0</b></li>
+    </ul>
+    <button id="btn-retry" class="cta">Go again</button>
+    <p class="note">Or press R.</p>
+  </div>
+</section>
+
+<section id="screen-win" class="screen centre gone">
+  <div class="card win">
+    <h2>Out through the vault</h2>
+    <p>You crossed five floors of another colony's burrow, fed on the way, and dropped into the root channels below.</p>
+    <ul class="report">
+      <li><span>Food carried</span><b id="stat-food">0</b></li>
+      <li><span>Ants killed</span><b id="stat-kills">0</b></li>
+      <li><span>Brood rescued</span><b id="stat-brood">0</b></li>
+      <li><span>Time underground</span><b id="stat-time">0:00</b></li>
+    </ul>
+    <button id="btn-again" class="cta">Run it again</button>
+  </div>
+</section>
+
+<script>
+function showFatal(msg) {
+  if (document.querySelector('.fatal')) return;
+  var el = document.createElement('div');
+  el.className = 'fatal';
+  el.textContent = msg;
+  document.body.appendChild(el);
+}
+addEventListener('error', function (e) {
+  // A blocked webfont or stylesheet is not fatal — the page has fallbacks.
+  if (e.target && e.target.tagName === 'LINK') return;
+  if (e.target && e.target.src) { showFatal('Could not load ' + e.target.src); return; }
+  // Cross-origin script errors arrive with no message; ignore those too.
+  if (!e.message || e.message === 'Script error.' || e.message === 'Script error') return;
+  showFatal(e.message);
+}, true);
+addEventListener('unhandledrejection', function (e) {
+  showFatal('Error: ' + ((e.reason && e.reason.message) || e.reason));
+});
+setTimeout(function () {
+  if (!window.game) showFatal('The game did not start. Press F12 and read the Console tab.');
+}, 12000);
+</script>
+
+<script type="importmap">
+{ "imports": { "three": "./three.module.js" } }
+</script>
+<script type="module" src="./game.js"></script>
+</body>
+</html>
